@@ -1,9 +1,23 @@
-import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Car, Menu } from "lucide-react";
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const token = localStorage.getItem("token");
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Check if user is logged in by checking localStorage
+        setIsLoggedIn(!!token);
+    }, [token]);
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        setIsLoggedIn(false);
+        navigate("/login");
+    };
 
     const getLinkClass = ({ isActive }: { isActive: boolean }) =>
         isActive ? "text-purple-600 underline" : "text-gray-700 hover:text-purple-600";
@@ -53,18 +67,29 @@ const Navbar = () => {
                     >
                         Profile
                     </NavLink>
-                    <NavLink
-                        to="/login"
-                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                    >
-                        Login
-                    </NavLink>
-                    <NavLink
-                        to="/register"
-                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                    >
-                        Register
-                    </NavLink>
+                    {!isLoggedIn ? (
+                        <>
+                            <NavLink
+                                to="/login"
+                                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                            >
+                                Login
+                            </NavLink>
+                            <NavLink
+                                to="/register"
+                                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                            >
+                                Register
+                            </NavLink>
+                        </>
+                    ) : (
+                        <button
+                            onClick={handleLogout}
+                            className="px-4 py-2 cursor-pointer bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                        >
+                            Logout
+                        </button>
+                    )}
                 </div>
             </div>
 

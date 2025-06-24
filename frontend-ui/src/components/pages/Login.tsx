@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import axios from "axios";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -14,7 +15,6 @@ const Login = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setErrorMessage("");
-        console.log("Login form submitted");
 
         if (!email.match(/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/)) {
             setErrorMessage("Invalid email address!");
@@ -26,23 +26,26 @@ const Login = () => {
             return;
         }
 
-        const loginDetails = {
-            email,
-            password,
-        };
+        const loginDetails = { email, password };
 
         try {
-            console.log("Login details:", loginDetails);
+            const response = await axios.post("http://localhost:3000/auth/login", loginDetails);
 
-            // Reset form
+            if (response.status !== 200) {
+                setErrorMessage(response.data.message || "Login failed");
+                return;
+            }
+
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+            localStorage.setItem("token", response.data.token);
+
             setEmail("");
             setPassword("");
 
-            alert("Login successful!");
             navigate("/");
         } catch (error) {
             console.error("Login error:", error);
-            setErrorMessage("Invalid credentials. Please try again.");
+            setErrorMessage(error.response?.data?.error || "An error occurred during login");
         }
     };
 
