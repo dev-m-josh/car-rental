@@ -2,7 +2,6 @@ import React from 'react'
 import Hero from '../Hero';
 import Features from '../Features';
 import Cars from '../Cars';
-import Footer from '../Footer';
 
 export const Home = () => {
   return (
@@ -10,7 +9,6 @@ export const Home = () => {
             <Hero />
             <Features />
             <Cars />
-            <Footer />
         </div>
   );
 }

@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { login } from "../../features/authSlice";
 
 const Register = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
@@ -56,7 +60,20 @@ const Register = () => {
         };
 
         try {
-            console.log("User registration details:", userDetails);
+            const response = await axios.post("http://localhost:3000/auth/register", userDetails, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (response.status !== 201) {
+                setErrorMessage(response.data.message || "Registration failed");
+                return;
+            }
+
+            const { user, token } = response.data;
+
+            dispatch(login({ ...user, token }));
 
             // Reset form
             setFirstName("");
@@ -67,11 +84,15 @@ const Register = () => {
             setPhoneNumber("");
             setAddress("");
 
-            alert("You have successfully registered! Please login to continue.");
-            navigate("/login");
-        } catch (error) {
-            console.error("Registration error:", error);
-            setErrorMessage("An error occurred. Please try again.");
+            navigate("/");
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                console.error("Registration error:", error.response?.data);
+                alert(error.response?.data?.error || "Registration failed");
+            } else {
+                console.error("Unexpected error:", error);
+                alert("An unexpected error occurred");
+            }
         }
     };
 

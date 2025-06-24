@@ -1,10 +1,15 @@
 import React, { useState } from "react";
-import { data, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login } from "../../features/authSlice";
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
+import type { AppDispatch } from "../../store";
 
 const Login = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
@@ -26,26 +31,32 @@ const Login = () => {
             return;
         }
 
-        const loginDetails = { email, password };
-
         try {
-            const response = await axios.post("http://localhost:3000/auth/login", loginDetails);
+            const response = await axios.post("http://localhost:3000/auth/login", {
+                email,
+                password,
+            });
 
-            if (response.status !== 200) {
+            if (response.status === 200) {
+                const user = response.data.user;
+                const token = response.data.token;
+                dispatch(login({ ...user, token }));
+
+
+                setEmail("");
+                setPassword("");
+                navigate("/");
+            } else {
                 setErrorMessage(response.data.message || "Login failed");
-                return;
             }
-
-            localStorage.setItem("user", JSON.stringify(response.data.user));
-            localStorage.setItem("token", response.data.token);
-
-            setEmail("");
-            setPassword("");
-
-            navigate("/");
-        } catch (error) {
-            console.error("Login error:", error);
-            setErrorMessage(error.response?.data?.error || "An error occurred during login");
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                console.error("Login error:", error.response?.data);
+                setErrorMessage(error.response?.data?.error || "Login failed");
+            } else {
+                console.error("Unexpected error:", error);
+                setErrorMessage("An unexpected error occurred");
+            }
         }
     };
 
@@ -68,7 +79,7 @@ const Login = () => {
                             type="email"
                             id="email"
                             value={email}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                            onChange={(e) => setEmail(e.target.value)}
                             placeholder="Enter your email..."
                             required
                             className="mt-1 text-black w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
@@ -84,7 +95,7 @@ const Login = () => {
                                 type={showPassword ? "text" : "password"}
                                 id="password"
                                 value={password}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
                                 className="pr-10 text-black w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
                             />
