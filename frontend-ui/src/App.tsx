@@ -8,6 +8,7 @@ import Register from "./components/pages/Register";
 import { Home } from "./components/pages/Home";
 import About from "./components/pages/About";
 import Footer from "./components/Footer";
+import { Dashboard } from "./components/pages/Dashboard";
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/about" element={<About />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />

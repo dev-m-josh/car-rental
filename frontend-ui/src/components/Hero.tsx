@@ -1,6 +1,7 @@
-// import { Search, MapPin, Calendar } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 const Hero = () => {
+    const navigate = useNavigate();
+
     return (
         <section
             id="home"
@@ -31,7 +32,8 @@ const Hero = () => {
                             labore et dolore magna aliqua.
                         </p>
 
-                        <button className="bg-yellow-500 hover:bg-yellow-600 outline-0 text-black font-semibold px-8 py-4 rounded-full cursor-pointer transition-colors duration-300 shadow-lg">
+                        <button className="bg-yellow-500 hover:bg-yellow-600 outline-0 text-black font-semibold px-8 py-4 rounded-full cursor-pointer transition-colors duration-300 shadow-lg"
+                            onClick={() => navigate('/about')}>
                             LEARN MORE
                         </button>
                     </div>

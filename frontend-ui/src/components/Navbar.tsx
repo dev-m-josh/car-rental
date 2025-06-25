@@ -26,7 +26,8 @@ const Navbar = () => {
     };
 
     const getLinkClass = ({ isActive }: { isActive: boolean }) =>
-        isActive ? "text-purple-600 underline" : "text-gray-700 hover:text-purple-600";
+        `${isActive ? "text-purple-600 underline" : "text-gray-700 hover:text-purple-600"} text-base lg:text-lg font-semibold transition-colors`;
+
 
     return (
         <nav className="w-full bg-white shadow-md fixed top-0 left-0 z-50">

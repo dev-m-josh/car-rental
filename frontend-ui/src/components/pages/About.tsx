@@ -8,7 +8,7 @@ const About = () => {
             <section className="pt-20 pb-16 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
                 <div className="container mx-auto px-4">
                     <div className="max-w-4xl mx-auto text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-6">About CarRental</h1>
+                        <h1 className="text-4xl md:text-5xl font-bold mb-6">About DriveConnect</h1>
                         <p className="text-xl mb-8 text-purple-100">
                             Your trusted partner for premium car rentals since 2010. We're committed to providing
                             exceptional service and reliable vehicles for all your transportation needs.
@@ -25,9 +25,9 @@ const About = () => {
                             <div>
                                 <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
                                 <p className="text-lg text-gray-600 mb-6">
-                                    Founded in 2010, CarRental started with a simple mission: to make car rentals easy,
-                                    affordable, and reliable for everyone. What began as a small local business has
-                                    grown into a trusted name in the car rental industry.
+                                    Founded in 2010, DriveConnect started with a simple mission: to make car rentals
+                                    easy, affordable, and reliable for everyone. What began as a small local business
+                                    has grown into a trusted name in the car rental industry.
                                 </p>
                                 <p className="text-lg text-gray-600 mb-6">
                                     Today, we serve thousands of customers annually with our diverse fleet of
@@ -189,7 +189,6 @@ const About = () => {
                     </div>
                 </div>
             </section>
-
         </div>
     );
 };
