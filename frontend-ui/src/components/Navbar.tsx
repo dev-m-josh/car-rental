@@ -4,17 +4,18 @@ import { Car, Menu } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { logout } from "../features/authSlice";
 
-
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const isAdmin = user.isAdmin;
 
     useEffect(() => {
         setIsLoggedIn(!!token);
-    }, [token]);
+    }, [token, user]);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -53,12 +54,19 @@ const Navbar = () => {
                     <NavLink to="/about" className={getLinkClass}>
                         About
                     </NavLink>
-                    <NavLink to="/bookings" className={getLinkClass}>
-                        Bookings
+                    <NavLink to="/cars" className={getLinkClass}>
+                        View Cars
                     </NavLink>
-                    <NavLink to="/dashboard" className={getLinkClass}>
-                        Dashboard
-                    </NavLink>
+                    {isLoggedIn && (
+                        <NavLink to="/dashboard" className={getLinkClass}>
+                            Dashboard
+                        </NavLink>
+                    )}
+                    {isAdmin && (
+                        <NavLink to="/admin" className={getLinkClass}>
+                            Admin
+                        </NavLink>
+                    )}
                 </div>
 
                 {/* Desktop Actions */}

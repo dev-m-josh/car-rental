@@ -9,12 +9,10 @@ import type { AppDispatch } from "../../store";
 const Login = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-
     const togglePassword = () => setShowPassword((prev) => !prev);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -41,7 +39,6 @@ const Login = () => {
                 const user = response.data.user;
                 const token = response.data.token;
                 dispatch(login({ ...user, token }));
-
 
                 setEmail("");
                 setPassword("");

@@ -7,8 +7,7 @@ import Login from "./components/pages/Login";
 import Register from "./components/pages/Register";
 import { Home } from "./components/pages/Home";
 import About from "./components/pages/About";
-import Footer from "./components/Footer";
-import { Dashboard } from "./components/pages/Dashboard";
+import { AdminDash } from "./components/pages/AdminDash";
 
 function App() {
 
@@ -21,10 +20,9 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/about" element={<About />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin" element={<AdminDash />} />
               <Route path="*" element={<NotFound />} />
           </Routes>
-          <Footer />
       </>
   );
 }

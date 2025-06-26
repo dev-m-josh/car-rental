@@ -1,5 +1,6 @@
 import React from "react";
 import { Car, Users, Award, Shield, Clock, MapPin } from "lucide-react";
+import Footer from "../Footer";
 
 const About = () => {
     return (
@@ -189,6 +190,7 @@ const About = () => {
                     </div>
                 </div>
             </section>
+            <Footer />
         </div>
     );
 };

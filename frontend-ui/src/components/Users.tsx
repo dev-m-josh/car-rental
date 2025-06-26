@@ -9,14 +9,16 @@ type User = {
     isAdmin: boolean;
 };
 
+const USERS_PER_PAGE = 10;
+
 export const Users = () => {
     const [users, setUsers] = useState<User[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const fetchUsers = async () => {
         try {
             const response = await fetch("http://localhost:3000/customer");
             const data = await response.json();
-            console.log(data);
             setUsers(data);
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -30,45 +32,42 @@ export const Users = () => {
     const handleActionChange = (action: string, user: User) => {
         switch (action) {
             case "update":
-                // Handle update logic
                 if (confirm(`Do you want to update ${user.firstName}?`)) {
-                    console.log("Updating user with ID:", user.customerID);
                     alert(`Update user: ${user.firstName}`);
                 }
                 break;
             case "delete":
-                // Handle delete logic
                 if (confirm(`Are you sure you want to delete ${user.firstName}?`)) {
                     const deleteUser = async () => {
                         try {
                             const response = await fetch(`http://localhost:3000/customer/delete/${user.customerID}`, {
                                 method: "DELETE",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
+                                headers: { "Content-Type": "application/json" },
                             });
-
-                            if (!response.ok) {
-                                throw new Error(`${response.statusText}`);
-                            }
-
-                            setUsers((prevUsers) => prevUsers.filter((u) => u.customerID !== user.customerID));
+                            if (!response.ok) throw new Error(`${response.statusText}`);
+                            setUsers((prev) => prev.filter((u) => u.customerID !== user.customerID));
                         } catch (err) {
-                            if (err instanceof Error) {
-                                console.error("Error deleting user:", err);
-                                alert(`Failed to delete user: ${err.message}`);
-                            } else {
-                                console.error("Unexpected error:", err);
-                                alert("An unexpected error occurred while deleting the user.");
-                            }
+                            console.error("Error deleting user:", err);
+                            alert(`Failed to delete user.`);
                         }
                     };
                     deleteUser();
                 }
                 break;
-            default:
-                break;
         }
+    };
+
+    // Pagination logic
+    const totalPages = Math.ceil(users.length / USERS_PER_PAGE);
+    const startIdx = (currentPage - 1) * USERS_PER_PAGE;
+    const paginatedUsers = users.slice(startIdx, startIdx + USERS_PER_PAGE);
+
+    const handlePrev = () => {
+        if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+    };
+
+    const handleNext = () => {
+        if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
     };
 
     return (
@@ -81,19 +80,19 @@ export const Users = () => {
                         <tr>
                             <th className="px-6 py-3">Name</th>
                             <th className="px-6 py-3">Email</th>
-                            <th className="px-6 py-3">Phone</th>
+                            <th className="px-6 py-3">Phone Number</th>
                             <th className="px-6 py-3">Role</th>
                             <th className="px-6 py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {users.map((user) => (
+                        {paginatedUsers.map((user) => (
                             <tr key={user.customerID} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-800">
+                                <td className="px-6 py-4 font-medium text-gray-800 whitespace-nowrap">
                                     {user.firstName} {user.lastName}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{user.email}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{user.phoneNumber}</td>
+                                <td className="px-6 py-4 text-gray-700 whitespace-nowrap">{user.email}</td>
+                                <td className="px-6 py-4 text-gray-700 whitespace-nowrap">{user.phoneNumber}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span
                                         className={`px-2 py-1 text-xs font-semibold rounded ${
@@ -103,8 +102,12 @@ export const Users = () => {
                                         {user.isAdmin ? "Admin" : "Customer"}
                                     </span>
                                 </td>
-                                <td>
-                                    <select onChange={(e) => handleActionChange(e.target.value, user)} defaultValue="">
+                                <td className="px-6 py-4">
+                                    <select
+                                        onChange={(e) => handleActionChange(e.target.value, user)}
+                                        defaultValue=""
+                                        className="text-black border border-gray-300 rounded px-2 py-1"
+                                    >
                                         <option value="" disabled>
                                             Actions
                                         </option>
@@ -123,6 +126,35 @@ export const Users = () => {
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="mt-4 flex justify-center items-center gap-40">
+                <button
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 text-sm font-medium rounded ${
+                        currentPage === 1
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : "bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"
+                    }`}
+                >
+                    Previous
+                </button>
+                <span className="text-sm text-white">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <button
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 text-sm font-medium rounded ${
+                        currentPage === totalPages
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : "bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"
+                    }`}
+                >
+                    Next
+                </button>
             </div>
         </div>
     );

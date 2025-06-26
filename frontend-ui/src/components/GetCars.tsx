@@ -1,166 +1,238 @@
 import { useEffect, useState } from "react";
-
-type CarType = {
-    carID: number;
-    carModel: string;
-    year: Date;
-    color: string;
-    rentalRate: number;
-    availability: boolean;
-    locationID: number;
-}
-
+import { useAppDispatch, useAppSelector } from "../hooks/redux";
+import { fetchCars, deleteCar, updateCar, addCar } from "../features/carSlice";
+import type { CarType, NewCarType } from "../features/carSlice";
 
 export default function GetCars() {
+    const dispatch = useAppDispatch();
+    const { cars, loading, error } = useAppSelector((state) => state.cars);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
+    const [showAddForm, setShowAddForm] = useState(false);
 
-    // State to hold car data
-    const [cars, setCars] = useState<CarType[]>([]);
-    // State for loading status
-    const [loading, setLoading] = useState(true);
-    // State for error messages
-    const [errorMessage, setErrorMessage] = useState("");
-
-    const fetchCars = async () => {
-        try {
-            setLoading(true);
-
-            const response = await fetch(`http://localhost:3000/cars`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            // If response is not OK, throw an error
-            if (!response.ok) {
-                throw new Error(`${response.statusText}`);
-            }
-
-            const data = await response.json();
-
-            // Check if response is an array
-            if (Array.isArray(data)) {
-                // Convert year strings to Date objects
-                const formattedCars = data.map((car) => ({
-                    ...car,
-                    year: new Date(car.year),
-                }));
-
-                setCars(formattedCars);
-            } else {
-                throw new Error("Unexpected response format");
-            }
-        } catch (err) {
-            if (err instanceof Error) {
-                setErrorMessage(err.message);
-            } else {
-                console.error("Error fetching cars:", err);
-                setErrorMessage("An unexpected error occurred while fetching cars.");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // useEffect runs once on component mount
     useEffect(() => {
-        fetchCars();
-    }, []);
+        dispatch(fetchCars());
+    }, [dispatch]);
 
     const handleActionChange = (action: string, car: CarType) => {
         switch (action) {
             case "update":
-                // Handle update logic
                 if (confirm(`Do you want to update ${car.carModel}?`)) {
-                    console.log("Updating car with ID:", car.carID);
-                    alert(`Update car: ${car.carModel}`);
+                    setSelectedCar(car);
+                    setIsEditing(true);
                 }
                 break;
             case "delete":
-                // Handle delete logic
                 if (confirm(`Are you sure you want to delete ${car.carModel}?`)) {
-                    const deleteCar = async () => {
-                        try {
-                            const response = await fetch(`http://localhost:3000/cars/${car.carID}`, {
-                                method: "DELETE",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                            });
-
-                            if (!response.ok) {
-                                throw new Error(`${response.statusText}`);
-                            }
-
-                            setCars((prevCars) => prevCars.filter((c) => c.carID !== car.carID));
-                        } catch (err) {
-                            if (err instanceof Error) {
-                                console.error("Error deleting car:", err);
-                                alert(`Failed to delete car: ${err.message}`);
-                            } else {
-                                console.error("Unexpected error:", err);
-                                alert("An unexpected error occurred while deleting the car.");
-                            }
-                        }
-                        alert(`Car ${car.carModel} has been deleted.`);
-                    };
-                    deleteCar();
+                    dispatch(deleteCar(car.carID));
+                    alert(`Car ${car.carModel} has been deleted.`);
                 }
                 break;
             case "toggleAvailability":
-                // Toggle car availability
-                console.log("Toggling availability for:", car.carID);
                 alert(`Car ${car.carModel} is now ${car.availability ? "not available" : "available"}.`);
-                break;
-            default:
                 break;
         }
     };
 
-    if (loading) return <p>Loading...</p>;
-    if (errorMessage) return <p style={{ color: "red" }}>{errorMessage}</p>;
+    if (loading) return <p className="text-center text-blue-500 text-lg">Loading...</p>;
+    if (error) return <p className="text-center text-red-500 text-lg">{error}</p>;
 
     return (
-        <div className="cars-container">
-            {cars.length === 0 ? (
-                <div>No cars available to display.</div>
-            ) : (
-                <table className="cars-table">
-                    <thead>
-                        <tr>
-                            <th>Car Model</th>
-                            <th>Year</th>
-                            <th>Color</th>
-                            <th>Rental Rate</th>
-                            <th>Availability</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {cars.map((car) => (
-                            <tr key={car.carID}>
-                                <td>{car.carModel}</td>
-                                <td>{car.year.getFullYear()}</td>
-                                <td>{car.color}</td>
-                                <td>$ {car.rentalRate}</td>
-                                <td>{car.availability ? "Available" : "Not Available"}</td>
-                                <td>
-                                    <select onChange={(e) => handleActionChange(e.target.value, car)} defaultValue="">
-                                        <option value="" disabled>
-                                            Actions
-                                        </option>
-                                        <option value="update">Update</option>
-                                        <option value="delete">Delete</option>
-                                        <option value="toggleAvailability">
-                                            {car.availability ? "Mark Unavailable" : "Mark Available"}
-                                        </option>
-                                    </select>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+        <div className="p-6">
+            {/* Edit Car Modal */}
+            {isEditing && selectedCar && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+                        <h2 className="text-xl font-semibold mb-4">Edit Car: {selectedCar.carModel}</h2>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const form = e.target as HTMLFormElement;
+                                const updatedCar: CarType = {
+                                    ...selectedCar,
+                                    carModel: form.model.value,
+                                    year: form.year.value,
+                                    color: form.color.value,
+                                    rentalRate: parseFloat(form.rate.value),
+                                    availability: form.availability.checked,
+                                };
+                                dispatch(updateCar(updatedCar));
+                                setIsEditing(false);
+                            }}
+                            className="space-y-4"
+                        >
+                            <input
+                                name="model"
+                                defaultValue={selectedCar.carModel}
+                                required
+                                className="w-full border p-2 rounded"
+                                placeholder="Model"
+                            />
+                            <input
+                                name="year"
+                                defaultValue={selectedCar.year}
+                                required
+                                className="w-full border p-2 rounded"
+                                placeholder="Year"
+                            />
+                            <input
+                                name="color"
+                                defaultValue={selectedCar.color}
+                                required
+                                className="w-full border p-2 rounded"
+                                placeholder="Color"
+                            />
+                            <input
+                                name="rate"
+                                type="number"
+                                defaultValue={selectedCar.rentalRate}
+                                required
+                                className="w-full border p-2 rounded"
+                                placeholder="Rental Rate"
+                            />
+                            <div className="flex items-center space-x-2">
+                                <input name="availability" type="checkbox" defaultChecked={selectedCar.availability} />
+                                <label>Available</label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
+
+            {/* Add Car Modal */}
+            {showAddForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+                        <h2 className="text-xl font-semibold mb-4">Add New Car</h2>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const form = e.target as HTMLFormElement;
+
+                                const newCar: NewCarType = {
+                                    carModel: form.model.value,
+                                    year: form.year.value,
+                                    color: form.color.value,
+                                    rentalRate: parseFloat(form.rate.value),
+                                    availability: form.availability.checked,
+                                    locationID: 1,
+                                };
+
+                                dispatch(addCar(newCar));
+                                setShowAddForm(false);
+                                form.reset();
+                            }}
+                            className="space-y-4"
+                        >
+                            <input name="model" required className="w-full border p-2 rounded" placeholder="Model" />
+                            <input name="year" required className="w-full border p-2 rounded" placeholder="Year" />
+                            <input name="color" required className="w-full border p-2 rounded" placeholder="Color" />
+                            <input
+                                name="rate"
+                                type="number"
+                                required
+                                className="w-full border p-2 rounded"
+                                placeholder="Rental Rate"
+                            />
+                            <div className="flex items-center space-x-2">
+                                <input name="availability" type="checkbox" defaultChecked />
+                                <label>Available</label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddForm(false)}
+                                    className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                                >
+                                    Add Car
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Car List */}
+            <div className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <p className="text-lg font-medium">Total Cars: {cars.length}</p>
+                    <button
+                        onClick={() => setShowAddForm(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                        Add Car
+                    </button>
+                </div>
+
+                {cars.length === 0 ? (
+                    <p className="text-center text-gray-500">No cars available to display.</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full table-auto border-collapse border border-gray-200">
+                            <thead>
+                                <tr className="bg-gray-100 text-left">
+                                    <th className="border px-4 py-2">Car Model</th>
+                                    <th className="border px-4 py-2">Year</th>
+                                    <th className="border px-4 py-2">Color</th>
+                                    <th className="border px-4 py-2">Rental Rate</th>
+                                    <th className="border px-4 py-2">Availability</th>
+                                    <th className="border px-4 py-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {cars.map((car) => (
+                                    <tr key={car.carID} className="hover:bg-gray-50">
+                                        <td className="border px-4 py-2">{car.carModel}</td>
+                                        <td className="border px-4 py-2">{new Date(car.year).getFullYear()}</td>
+                                        <td className="border px-4 py-2">{car.color}</td>
+                                        <td className="border px-4 py-2">${car.rentalRate}</td>
+                                        <td className="border px-4 py-2">
+                                            {car.availability ? "Available" : "Not Available"}
+                                        </td>
+                                        <td className="border px-4 py-2">
+                                            <select
+                                                onChange={(e) => handleActionChange(e.target.value, car)}
+                                                defaultValue=""
+                                                className="border p-1 rounded"
+                                            >
+                                                <option value="" disabled>
+                                                    Actions
+                                                </option>
+                                                <option value="update">Update</option>
+                                                <option value="delete">Delete</option>
+                                                <option value="toggleAvailability">
+                                                    {car.availability ? "Mark Unavailable" : "Mark Available"}
+                                                </option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
